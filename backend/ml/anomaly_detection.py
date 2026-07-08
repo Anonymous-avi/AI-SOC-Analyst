@@ -37,3 +37,43 @@ def detect_brute_force(parsed_logs):
             })
 
     return alerts
+def detect_path_traversal(parsed_logs):
+
+    alerts = []
+
+    suspicious_patterns = [
+        "../",
+        "..\\",
+        "%2e%2e",
+        "%252e%252e"
+    ]
+
+    for log in parsed_logs:
+
+        path = log["path"].lower()
+
+        matched_pattern = None
+
+        for pattern in suspicious_patterns:
+            if pattern in path:
+                matched_pattern = pattern
+                break
+
+        if matched_pattern:
+
+            alerts.append({
+                "attack_type": "Path Traversal",
+                "severity": "High",
+                "attacker_ip": log["source_ip"],
+                "request_method": log["method"],
+                "requested_path": log["path"],
+                "status_code": log["status_code"],
+                "evidence": f"Suspicious path pattern detected: {matched_pattern}",
+                "recommendation": (
+                    "Block or investigate the source IP, review web server logs, "
+                    "validate path handling, and ensure the web server cannot "
+                    "access files outside intended directories."
+                )
+            })
+
+    return alerts

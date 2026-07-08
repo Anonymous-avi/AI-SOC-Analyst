@@ -24,12 +24,16 @@ async def upload_log(file: UploadFile = File(...)):
 
     parsed_logs = parse_result["parsed_logs"]
 
-    alerts = detect_security_incidents(parsed_logs)
+    alerts = detect_security_incidents(
+    parse_result["log_type"],
+    parsed_logs
+    )
 
     return {
-        "filename": file.filename,
-        "detected_log_type": parse_result["log_type"],
-        "total_logs": len(parsed_logs),
-        "alerts": alerts,
-        "logs": parsed_logs
-    }
+    "filename": file.filename,
+    "detected_log_type": parse_result["log_type"],
+    "total_logs": len(parsed_logs),
+    "failed_lines": parse_result["failed_lines"],
+    "alerts": alerts,
+    "logs": parsed_logs
+}
