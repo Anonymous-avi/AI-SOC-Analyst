@@ -1,7 +1,18 @@
+from datetime import datetime
+
 from app.schemas.security_event import (
     EventOutcome,
     SecurityEvent,
 )
+
+SSH_TIMESTAMP_FORMAT = "%b %d %H:%M:%S"
+
+
+def parse_ssh_timestamp(timestamp: str) -> datetime:
+    return datetime.strptime(
+        timestamp,
+        SSH_TIMESTAMP_FORMAT
+    )
 
 
 def normalize_ssh_event(log: dict) -> SecurityEvent:
@@ -21,7 +32,7 @@ def normalize_ssh_event(log: dict) -> SecurityEvent:
         outcome = EventOutcome.UNKNOWN
 
     return SecurityEvent(
-        timestamp=log["timestamp"],
+        timestamp=parse_ssh_timestamp(log["timestamp"]),
         source_type="ssh",
         source_ip=log["ip_address"],
         destination_ip=None,

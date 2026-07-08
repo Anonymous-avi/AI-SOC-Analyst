@@ -1,14 +1,10 @@
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from app.schemas.security_event import SecurityEvent
 
 
-SSH_TIMESTAMP_FORMAT = "%b %d %H:%M:%S"
 
-
-def parse_ssh_timestamp(timestamp: str) -> datetime:
-    return datetime.strptime(timestamp, SSH_TIMESTAMP_FORMAT)
 
 
 def detect_brute_force(
@@ -25,7 +21,7 @@ def detect_brute_force(
         if event.source_ip is None:
             continue
 
-        event_time = parse_ssh_timestamp(event.timestamp)
+        event_time = event.timestamp
 
         failures_by_ip[event.source_ip].append(
             (event_time, event)

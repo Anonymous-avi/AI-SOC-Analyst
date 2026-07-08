@@ -1,7 +1,21 @@
+from datetime import datetime, timezone
 from app.schemas.security_event import (
     EventOutcome,
     SecurityEvent,
 )
+APACHE_TIMESTAMP_FORMAT = "%d/%b/%Y:%H:%M:%S %z"
+
+
+def parse_apache_timestamp(timestamp: str) -> datetime:
+
+    parsed_timestamp = datetime.strptime(
+        timestamp,
+        APACHE_TIMESTAMP_FORMAT
+    )
+
+    return parsed_timestamp.astimezone(
+        timezone.utc
+    ).replace(tzinfo=None)
 
 
 def normalize_apache_event(log: dict) -> SecurityEvent:
@@ -21,7 +35,7 @@ def normalize_apache_event(log: dict) -> SecurityEvent:
         outcome = EventOutcome.UNKNOWN
 
     return SecurityEvent(
-        timestamp=log["timestamp"],
+        timestamp=parse_apache_timestamp(log["timestamp"]),
         source_type="apache",
         source_ip=log["source_ip"],
         destination_ip=None,

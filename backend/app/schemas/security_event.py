@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import Any
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 
@@ -21,7 +22,7 @@ class EventOutcome(str, Enum):
 
 
 class SecurityEvent(BaseModel):
-    timestamp: str = Field(min_length=1)
+    timestamp: datetime
 
     source_type: str = Field(min_length=1)
 
