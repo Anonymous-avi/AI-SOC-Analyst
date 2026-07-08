@@ -1,14 +1,15 @@
-# Python
+# Python Virtual Environments
 venv/
+.venv/
+
+# Python Cache
 __pycache__/
 *.pyc
+.pytest_cache/
+.ipynb_checkpoints/
 
 # Environment Variables
 .env
-
-# Python Cache
-.pytest_cache/
-.ipynb_checkpoints/
 
 # Uploads
 backend/uploads/
