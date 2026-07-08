@@ -25,15 +25,12 @@ async def upload_log(file: UploadFile = File(...)):
 
     parsed_logs = parse_result["parsed_logs"]
 
-    alerts = detect_security_incidents(
-        parse_result["log_type"],
-        parsed_logs
+    normalized_events = normalize_logs(
+    parse_result["log_type"],
+    parsed_logs
     )
 
-    normalized_events = normalize_logs(
-        parse_result["log_type"],
-        parsed_logs
-    )
+    alerts = detect_security_incidents(normalized_events)
 
     return {
         "filename": file.filename,

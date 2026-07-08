@@ -1,7 +1,11 @@
+from app.schemas.security_event import SecurityEvent
 from normalizers.normalizer_registry import get_normalizer
 
 
-def normalize_logs(log_type: str, parsed_logs: list):
+def normalize_logs(
+    log_type: str,
+    parsed_logs: list
+) -> list[SecurityEvent]:
 
     normalizer = get_normalizer(log_type)
 
