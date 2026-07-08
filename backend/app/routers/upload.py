@@ -20,16 +20,16 @@ async def upload_log(file: UploadFile = File(...)):
 
     content = read_log_file(file_path)
 
-    parsed_logs = parse_log_content(content)
+    parse_result = parse_log_content(content)
+
+    parsed_logs = parse_result["parsed_logs"]
 
     alerts = detect_security_incidents(parsed_logs)
 
     return {
-
+        "filename": file.filename,
+        "detected_log_type": parse_result["log_type"],
         "total_logs": len(parsed_logs),
-
         "alerts": alerts,
-
         "logs": parsed_logs
-
     }
