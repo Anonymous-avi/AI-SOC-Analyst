@@ -1,0 +1,28 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Environment Variables
+.env
+
+# Python Cache
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Uploads
+backend/uploads/
+
+# Trained Models
+models/
+
+# Frontend
+node_modules/
+dist/
+
+# VS Code
+.vscode/
+
+# OS Files
+.DS_Store
+Thumbs.db
