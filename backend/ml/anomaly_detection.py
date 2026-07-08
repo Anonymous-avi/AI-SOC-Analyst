@@ -1,42 +1,87 @@
 from collections import defaultdict
+from datetime import datetime, timedelta
+
 from app.schemas.security_event import SecurityEvent
 
-def detect_brute_force(events: list[SecurityEvent]):
 
-    failed_attempts = defaultdict(int)
-    targeted_users = defaultdict(set)
+SSH_TIMESTAMP_FORMAT = "%b %d %H:%M:%S"
+
+
+def parse_ssh_timestamp(timestamp: str) -> datetime:
+    return datetime.strptime(timestamp, SSH_TIMESTAMP_FORMAT)
+
+
+def detect_brute_force(
+    events: list[SecurityEvent],
+    threshold: int = 3,
+    window_seconds: int = 60
+):
+    failures_by_ip = defaultdict(list)
 
     for event in events:
-
         if event.event_type != "authentication_failure":
             continue
 
         if event.source_ip is None:
             continue
 
-        failed_attempts[event.source_ip] += 1
+        event_time = parse_ssh_timestamp(event.timestamp)
 
-        if event.user:
-            targeted_users[event.source_ip].add(event.user)
+        failures_by_ip[event.source_ip].append(
+            (event_time, event)
+        )
 
     alerts = []
 
-    for source_ip, count in failed_attempts.items():
+    for source_ip, failures in failures_by_ip.items():
+        failures.sort(key=lambda item: item[0])
 
-        if count >= 3:
+        window_start = 0
 
-            alerts.append({
-                "attack_type": "Brute Force",
-                "severity": "high",
-                "attacker_ip": source_ip,
-                "failed_attempts": count,
-                "target_users": sorted(targeted_users[source_ip]),
-                "recommendation": (
-                    "Investigate the source IP, review authentication activity, "
-                    "reset affected credentials if compromise is suspected, "
-                    "and enforce MFA."
-                )
-            })
+        for window_end in range(len(failures)):
+            current_time = failures[window_end][0]
+
+            while (
+                current_time - failures[window_start][0]
+                > timedelta(seconds=window_seconds)
+            ):
+                window_start += 1
+
+            window_size = window_end - window_start + 1
+
+            if window_size >= threshold:
+                window_events = failures[
+                    window_start:window_end + 1
+                ]
+
+                targeted_users = sorted({
+                    event.user
+                    for _, event in window_events
+                    if event.user
+                })
+
+                start_time = window_events[0][0]
+                end_time = window_events[-1][0]
+
+                alerts.append({
+                    "attack_type": "Brute Force",
+                    "severity": "high",
+                    "attacker_ip": source_ip,
+                    "failed_attempts": window_size,
+                    "target_users": targeted_users,
+                    "window_start": start_time.isoformat(),
+                    "window_end": end_time.isoformat(),
+                    "window_seconds": (
+                        end_time - start_time
+                    ).total_seconds(),
+                    "recommendation": (
+                        "Investigate the source IP, review authentication "
+                        "activity around the detection window, reset affected "
+                        "credentials if compromise is suspected, and enforce MFA."
+                    )
+                })
+
+                break
 
     return alerts
 def detect_path_traversal(events: list[SecurityEvent]):
