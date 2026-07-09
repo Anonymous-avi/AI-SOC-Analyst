@@ -1,3 +1,4 @@
+from app.services.alert_builder import build_security_alert
 from app.schemas.security_event import SecurityEvent
 from ml.anomaly_detection import (
     detect_brute_force,
@@ -11,14 +12,18 @@ DETECTORS = [
 ]
 
 
-def detect_security_incidents(
-    events: list[SecurityEvent]
-):
+def detect_security_incidents(events):
 
-    alerts = []
+    security_alerts = []
 
     for detector in DETECTORS:
-        detector_alerts = detector(events)
-        alerts.extend(detector_alerts)
 
-    return alerts
+        detector_results = detector(events)
+
+        for result in detector_results:
+
+            alert = build_security_alert(result)
+
+            security_alerts.append(alert)
+
+    return security_alerts
