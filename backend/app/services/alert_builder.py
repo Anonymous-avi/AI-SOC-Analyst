@@ -1,3 +1,4 @@
+from app.services.threat_score_service import calculate_threat_score
 from datetime import datetime
 from uuid import uuid4
 
@@ -17,6 +18,22 @@ def build_security_alert(detector_output: dict) -> SecurityAlert:
     mitre = get_mitre_mapping(
         detector_output["attack_type"]
     )
+    ioc_count = 1
+
+    score = calculate_threat_score(
+    attack_type=detector_output["attack_type"],
+    severity=severity,
+    confidence=0.95,
+    ioc_count=ioc_count,
+)
+    if score >= 90:
+      risk_level = "Critical"
+    elif score >= 70:
+      risk_level = "High"
+    elif score >= 40:
+       risk_level = "Medium"
+    else:
+       risk_level = "Low"
 
     return SecurityAlert(
 
@@ -35,6 +52,10 @@ def build_security_alert(detector_output: dict) -> SecurityAlert:
         recommendation=detector_output["recommendation"],
 
         mitre=mitre,
+
+        threat_score=score,
+
+        risk_level=risk_level,
 
         created_at=datetime.utcnow()
     )

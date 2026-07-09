@@ -36,3 +36,7 @@ class SecurityAlert(BaseModel):
     mitre: MitreTechnique
 
     created_at: datetime
+
+    threat_score: int
+
+    risk_level: str
