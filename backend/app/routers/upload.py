@@ -1,5 +1,7 @@
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, Depends, File, UploadFile
 
+from app.dependencies.database import get_alert_repository
+from app.repositories.alert_repository import AlertRepository
 from app.services.detection_service import detect_security_incidents
 from app.services.normalization_service import normalize_logs
 from app.services.parser_service import parse_log_content
@@ -16,7 +18,12 @@ router = APIRouter(
 
 
 @router.post("/")
-async def upload_log(file: UploadFile = File(...)):
+async def upload_log(
+    file: UploadFile = File(...),
+    alert_repository: AlertRepository = Depends(
+        get_alert_repository
+    ),
+):
 
     file_path = save_uploaded_file(file)
 
@@ -34,6 +41,10 @@ async def upload_log(file: UploadFile = File(...)):
     alerts = detect_security_incidents(
         normalized_events,
     )
+
+    # Persist every generated SecurityAlert.
+    for alert in alerts:
+        alert_repository.save(alert)
 
     return {
         "filename": file.filename,

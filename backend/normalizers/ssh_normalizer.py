@@ -1,18 +1,26 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.schemas.security_event import (
     EventOutcome,
     SecurityEvent,
 )
 
-SSH_TIMESTAMP_FORMAT = "%b %d %H:%M:%S"
+
+SSH_TIMESTAMP_FORMAT = "%Y %b %d %H:%M:%S"
 
 
 def parse_ssh_timestamp(timestamp: str) -> datetime:
-    return datetime.strptime(
-        timestamp,
-        SSH_TIMESTAMP_FORMAT
+
+    current_year = datetime.now(timezone.utc).year
+
+    timestamp_with_year = (
+        f"{current_year} {timestamp}"
     )
+
+    return datetime.strptime(
+        timestamp_with_year,
+        SSH_TIMESTAMP_FORMAT,
+    ).replace(tzinfo=timezone.utc)
 
 
 def normalize_ssh_event(log: dict) -> SecurityEvent:
@@ -32,7 +40,9 @@ def normalize_ssh_event(log: dict) -> SecurityEvent:
         outcome = EventOutcome.UNKNOWN
 
     return SecurityEvent(
-        timestamp=parse_ssh_timestamp(log["timestamp"]),
+        timestamp=parse_ssh_timestamp(
+            log["timestamp"]
+        ),
         source_type="ssh",
         source_ip=log["ip_address"],
         destination_ip=None,
@@ -42,5 +52,5 @@ def normalize_ssh_event(log: dict) -> SecurityEvent:
         user=log["username"],
         action="login",
         outcome=outcome,
-        raw_event=log
+        raw_event=log,
     )
