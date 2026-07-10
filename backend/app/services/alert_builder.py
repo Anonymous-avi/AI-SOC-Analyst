@@ -7,6 +7,7 @@ from app.schemas.security_alert import (
     SecurityAlert,
 )
 from app.schemas.security_event import SecurityEvent
+from app.services.ioc_enrichment_service import enrich_iocs
 from app.services.mitre_service import get_mitre_mapping
 from app.services.threat_score_service import calculate_threat_score
 from nlp.ioc_extractor import extract_iocs
@@ -20,7 +21,6 @@ def extract_iocs_from_evidence(
 
     for event in evidence_events:
 
-        # Include common normalized fields.
         if event.source_ip:
             combined_text_parts.append(event.source_ip)
 
@@ -33,7 +33,6 @@ def extract_iocs_from_evidence(
         if event.user:
             combined_text_parts.append(event.user)
 
-        # Include the original parsed event data.
         combined_text_parts.extend(
             str(value)
             for value in event.raw_event.values()
@@ -62,9 +61,13 @@ def build_security_alert(
         [],
     )
 
+    # Extract IOCs only from the events that triggered this alert.
     iocs = extract_iocs_from_evidence(
         evidence_events
     )
+
+    # Enrich those alert-specific IOCs.
+    threat_intelligence = enrich_iocs(iocs)
 
     ioc_count = (
         len(iocs.ips)
@@ -107,6 +110,7 @@ def build_security_alert(
         recommendation=detector_output["recommendation"],
         mitre=mitre,
         iocs=iocs,
+        threat_intelligence=threat_intelligence,
         threat_score=score,
         risk_level=risk_level,
         created_at=datetime.now(timezone.utc),

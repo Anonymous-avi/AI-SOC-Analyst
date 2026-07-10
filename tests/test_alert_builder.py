@@ -69,6 +69,14 @@ def test_build_brute_force_security_alert():
     assert alert.risk_level == "High"
 
     assert alert.alert_id.startswith("ALT-")
+    assert len(alert.threat_intelligence) == 1
+
+    intel = alert.threat_intelligence[0]
+
+    assert intel.indicator == "192.168.1.10"
+    assert intel.reputation == "private"
+    assert intel.malicious is False
+    assert intel.provider == "local"
 
 
 def test_build_critical_alert_with_multiple_iocs():
@@ -109,6 +117,15 @@ def test_build_critical_alert_with_multiple_iocs():
 
     assert alert.threat_score == 95
     assert alert.risk_level == "Critical"
+    assert len(alert.threat_intelligence) == 1
+
+    intel = alert.threat_intelligence[0]
+
+    assert intel.indicator == "203.45.12.8"
+    assert intel.reputation == "malicious"
+    assert intel.malicious is True
+    assert intel.confidence == 0.95
+    assert intel.provider == "local"
 
 
 def test_generated_alert_ids_are_unique():

@@ -1,3 +1,4 @@
+from app.schemas.threat_intelligence import ThreatIntelligenceResult
 from app.schemas.ioc import IOC
 from datetime import datetime
 from enum import Enum
@@ -43,3 +44,5 @@ class SecurityAlert(BaseModel):
     risk_level: str
 
     iocs: IOC
+    
+    threat_intelligence: list[ThreatIntelligenceResult]
