@@ -1,11 +1,9 @@
 from datetime import datetime, timezone
 from uuid import uuid4
 
+from app.schemas.detection_result import DetectionResult
 from app.schemas.ioc import IOC
-from app.schemas.security_alert import (
-    AlertSeverity,
-    SecurityAlert,
-)
+from app.schemas.security_alert import SecurityAlert
 from app.schemas.security_event import SecurityEvent
 from app.services.ioc_enrichment_service import enrich_iocs
 from app.services.mitre_service import get_mitre_mapping
@@ -45,29 +43,27 @@ def extract_iocs_from_evidence(
 
 
 def build_security_alert(
-    detector_output: dict,
+    detector_output: DetectionResult,
 ) -> SecurityAlert:
 
-    severity = AlertSeverity(
-        detector_output["severity"].upper()
-    )
+    attack_type = detector_output.attack_type
+    severity = detector_output.severity
+    attacker_ip = detector_output.attacker_ip
+    confidence = detector_output.confidence
+    recommendation = detector_output.recommendation
+    evidence_events = detector_output.evidence_events
 
     mitre = get_mitre_mapping(
-        detector_output["attack_type"]
+        attack_type
     )
 
-    evidence_events = detector_output.get(
-        "evidence_events",
-        [],
-    )
-
-    # Extract IOCs only from the events that triggered this alert.
     iocs = extract_iocs_from_evidence(
         evidence_events
     )
 
-    # Enrich those alert-specific IOCs.
-    threat_intelligence = enrich_iocs(iocs)
+    threat_intelligence = enrich_iocs(
+        iocs
+    )
 
     ioc_count = (
         len(iocs.ips)
@@ -79,36 +75,31 @@ def build_security_alert(
         + len(iocs.malware)
     )
 
-    confidence = 0.95
-
     score = calculate_threat_score(
-    attack_type=detector_output["attack_type"],
-    severity=severity,
-    confidence=confidence,
-    ioc_count=ioc_count,
-    threat_intelligence=threat_intelligence,
+        attack_type=attack_type,
+        severity=severity,
+        confidence=confidence,
+        ioc_count=ioc_count,
+        threat_intelligence=threat_intelligence,
     )
 
     if score >= 90:
         risk_level = "Critical"
-
     elif score >= 70:
         risk_level = "High"
-
     elif score >= 40:
         risk_level = "Medium"
-
     else:
         risk_level = "Low"
 
     return SecurityAlert(
         alert_id=f"ALT-{uuid4().hex[:8].upper()}",
-        title=f"{detector_output['attack_type']} Detected",
-        attack_type=detector_output["attack_type"],
+        title=f"{attack_type} Detected",
+        attack_type=attack_type,
         severity=severity,
         confidence=confidence,
-        attacker_ip=detector_output.get("attacker_ip"),
-        recommendation=detector_output["recommendation"],
+        attacker_ip=attacker_ip,
+        recommendation=recommendation,
         mitre=mitre,
         iocs=iocs,
         threat_intelligence=threat_intelligence,

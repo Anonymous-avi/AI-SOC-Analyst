@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from app.schemas.security_alert import AlertSeverity
 from app.schemas.security_event import (
     EventOutcome,
     SecurityEvent,
@@ -35,8 +35,18 @@ def test_detect_brute_force_inside_time_window():
     alerts = detect_brute_force(events)
 
     assert len(alerts) == 1
-    assert alerts[0]["attack_type"] == "Brute Force"
-    assert alerts[0]["failed_attempts"] == 3
+
+    alert = alerts[0]
+
+    assert alert.attack_type == "Brute Force"
+    assert alert.severity == AlertSeverity.HIGH
+    assert alert.attacker_ip == "192.168.1.10"
+    assert alert.confidence == 0.95
+
+    assert alert.metadata["failed_attempts"] == 3
+    assert alert.metadata["target_users"] == ["admin"]
+
+    assert len(alert.evidence_events) == 3
 
 
 def test_no_brute_force_outside_time_window():
@@ -63,14 +73,31 @@ def test_detect_path_traversal():
         raw_event={
             "path": "/../../etc/passwd",
             "status_code": 400,
-        }
+        },
     )
 
     alerts = detect_path_traversal([event])
 
     assert len(alerts) == 1
-    assert alerts[0]["attack_type"] == "Path Traversal"
-    assert alerts[0]["attacker_ip"] == "203.45.12.8"
+
+    alert = alerts[0]
+
+    assert alert.attack_type == "Path Traversal"
+    assert alert.severity == AlertSeverity.HIGH
+    assert alert.attacker_ip == "203.45.12.8"
+    assert alert.confidence == 0.95
+
+    assert alert.metadata["request_method"] == "GET"
+    assert alert.metadata["requested_path"] == "/../../etc/passwd"
+    assert alert.metadata["status_code"] == 400
+
+    assert (
+        alert.metadata["evidence"]
+        == "Suspicious path pattern detected: ../"
+    )
+
+    assert len(alert.evidence_events) == 1
+    assert alert.evidence_events[0] == event
 
 
 def test_normal_http_request_is_not_path_traversal():

@@ -1,6 +1,10 @@
 from datetime import datetime, timezone
 
-from app.schemas.security_alert import SecurityAlert
+from app.schemas.detection_result import DetectionResult
+from app.schemas.security_alert import (
+    AlertSeverity,
+    SecurityAlert,
+)
 from app.schemas.security_event import SecurityEvent
 from app.services.alert_builder import build_security_alert
 
@@ -11,6 +15,7 @@ def create_security_event(
     service: str,
     raw_event: dict,
 ) -> SecurityEvent:
+
     return SecurityEvent(
         timestamp=datetime.now(timezone.utc),
         source_type="test",
@@ -39,13 +44,18 @@ def test_build_brute_force_security_alert():
         },
     )
 
-    detector_output = {
-        "attack_type": "Brute Force",
-        "severity": "High",
-        "attacker_ip": "192.168.1.10",
-        "evidence_events": [evidence_event],
-        "recommendation": "Investigate the source IP.",
-    }
+    detector_output = DetectionResult(
+        attack_type="Brute Force",
+        severity=AlertSeverity.HIGH,
+        attacker_ip="192.168.1.10",
+        confidence=0.95,
+        evidence_events=[evidence_event],
+        recommendation="Investigate the source IP.",
+        metadata={
+            "failed_attempts": 3,
+            "target_users": ["admin"],
+        },
+    )
 
     alert = build_security_alert(
         detector_output=detector_output,
@@ -54,9 +64,8 @@ def test_build_brute_force_security_alert():
     assert isinstance(alert, SecurityAlert)
 
     assert alert.attack_type == "Brute Force"
-    assert alert.severity.value == "HIGH"
+    assert alert.severity == AlertSeverity.HIGH
     assert alert.attacker_ip == "192.168.1.10"
-
     assert alert.confidence == 0.95
 
     assert alert.mitre.tactic == "Credential Access"
@@ -69,6 +78,7 @@ def test_build_brute_force_security_alert():
     assert alert.risk_level == "High"
 
     assert alert.alert_id.startswith("ALT-")
+
     assert len(alert.threat_intelligence) == 1
 
     intel = alert.threat_intelligence[0]
@@ -94,13 +104,19 @@ def test_build_critical_alert_with_multiple_iocs():
         },
     )
 
-    detector_output = {
-        "attack_type": "Path Traversal",
-        "severity": "High",
-        "attacker_ip": "203.45.12.8",
-        "evidence_events": [evidence_event],
-        "recommendation": "Investigate the web request.",
-    }
+    detector_output = DetectionResult(
+        attack_type="Path Traversal",
+        severity=AlertSeverity.HIGH,
+        attacker_ip="203.45.12.8",
+        confidence=0.95,
+        evidence_events=[evidence_event],
+        recommendation="Investigate the web request.",
+        metadata={
+            "request_method": "GET",
+            "requested_path": "/../../etc/passwd",
+            "status_code": 400,
+        },
+    )
 
     alert = build_security_alert(
         detector_output=detector_output,
@@ -109,6 +125,9 @@ def test_build_critical_alert_with_multiple_iocs():
     assert isinstance(alert, SecurityAlert)
 
     assert alert.attack_type == "Path Traversal"
+    assert alert.severity == AlertSeverity.HIGH
+    assert alert.attacker_ip == "203.45.12.8"
+    assert alert.confidence == 0.95
 
     assert alert.mitre.technique_id == "T1083"
 
@@ -117,6 +136,7 @@ def test_build_critical_alert_with_multiple_iocs():
 
     assert alert.threat_score == 100
     assert alert.risk_level == "Critical"
+
     assert len(alert.threat_intelligence) == 1
 
     intel = alert.threat_intelligence[0]
@@ -142,13 +162,14 @@ def test_generated_alert_ids_are_unique():
         },
     )
 
-    detector_output = {
-        "attack_type": "Brute Force",
-        "severity": "High",
-        "attacker_ip": "192.168.1.10",
-        "evidence_events": [evidence_event],
-        "recommendation": "Investigate the source IP.",
-    }
+    detector_output = DetectionResult(
+        attack_type="Brute Force",
+        severity=AlertSeverity.HIGH,
+        attacker_ip="192.168.1.10",
+        confidence=0.95,
+        evidence_events=[evidence_event],
+        recommendation="Investigate the source IP.",
+    )
 
     first_alert = build_security_alert(detector_output)
     second_alert = build_security_alert(detector_output)

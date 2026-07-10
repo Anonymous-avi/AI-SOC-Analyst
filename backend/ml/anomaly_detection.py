@@ -1,5 +1,7 @@
+from app.schemas.detection_result import DetectionResult
 from collections import defaultdict
 from datetime import timedelta
+from app.schemas.security_alert import AlertSeverity
 
 from app.schemas.security_event import SecurityEvent
 
@@ -64,33 +66,32 @@ def detect_brute_force(
                 start_time = window_events[0][0]
                 end_time = window_events[-1][0]
 
-                alerts.append({
-                    "attack_type": "Brute Force",
-                    "severity": "high",
-                    "attacker_ip": source_ip,
-                    "failed_attempts": window_size,
-                    "target_users": targeted_users,
-
-                    "window_start": start_time.isoformat(),
-                    "window_end": end_time.isoformat(),
-
-                    "window_seconds": (
-                        end_time - start_time
-                    ).total_seconds(),
-
-                    # SecurityEvents that triggered this detection
-                    "evidence_events": [
-                        event
-                        for _, event in window_events
-                    ],
-
-                    "recommendation": (
-                        "Investigate the source IP, review authentication "
-                        "activity around the detection window, reset affected "
-                        "credentials if compromise is suspected, and enforce MFA."
-                    ),
-                })
-
+                alerts.append(
+    DetectionResult(
+        attack_type="Brute Force",
+        severity=AlertSeverity.HIGH,
+        attacker_ip=source_ip,
+        confidence=0.95,
+        recommendation=(
+            "Investigate the source IP, review authentication "
+            "activity around the detection window, reset affected "
+            "credentials if compromise is suspected, and enforce MFA."
+        ),
+        evidence_events=[
+            event
+            for _, event in window_events
+        ],
+        metadata={
+            "failed_attempts": window_size,
+            "target_users": targeted_users,
+            "window_start": start_time.isoformat(),
+            "window_end": end_time.isoformat(),
+            "window_seconds": (
+                end_time - start_time
+            ).total_seconds(),
+        },
+    )
+)
                 # Only generate one alert per source IP
                 break
 
@@ -133,32 +134,31 @@ def detect_path_traversal(
 
         if matched_pattern:
 
-            alerts.append({
-                "attack_type": "Path Traversal",
-                "severity": "high",
-                "attacker_ip": event.source_ip,
-
-                "request_method": event.action,
-                "requested_path": path,
-
-                "status_code": event.raw_event.get(
-                    "status_code"
-                ),
-
-                "evidence": (
-                    f"Suspicious path pattern detected: "
-                    f"{matched_pattern}"
-                ),
-
-                # Only this event triggered this detection
-                "evidence_events": [event],
-
-                "recommendation": (
-                    "Investigate the source IP and affected endpoint, review "
-                    "related web requests, validate and canonicalize paths, "
-                    "and ensure the web server cannot access files outside "
-                    "intended directories."
-                ),
-            })
+            alerts.append(
+    DetectionResult(
+        attack_type="Path Traversal",
+        severity=AlertSeverity.HIGH,
+        attacker_ip=event.source_ip,
+        confidence=0.95,
+        recommendation=(
+            "Investigate the source IP and affected endpoint, review "
+            "related web requests, validate and canonicalize paths, "
+            "and ensure the web server cannot access files outside "
+            "intended directories."
+        ),
+        evidence_events=[event],
+        metadata={
+            "request_method": event.action,
+            "requested_path": path,
+            "status_code": event.raw_event.get(
+                "status_code"
+            ),
+            "evidence": (
+                f"Suspicious path pattern detected: "
+                f"{matched_pattern}"
+            ),
+        },
+    )
+)
 
     return alerts
