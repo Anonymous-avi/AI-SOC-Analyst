@@ -1,6 +1,6 @@
 from app.schemas.ioc import IOC
 from app.services.threat_score_service import calculate_threat_score
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 
 from app.schemas.security_alert import (
@@ -71,5 +71,5 @@ def build_security_alert(
 
         risk_level=risk_level,
 
-        created_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc)
     )
