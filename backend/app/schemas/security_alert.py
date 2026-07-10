@@ -1,3 +1,4 @@
+from app.schemas.ioc import IOC
 from datetime import datetime
 from enum import Enum
 
@@ -40,3 +41,5 @@ class SecurityAlert(BaseModel):
     threat_score: int
 
     risk_level: str
+
+    iocs: IOC

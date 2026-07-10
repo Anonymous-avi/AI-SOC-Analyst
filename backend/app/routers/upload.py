@@ -1,3 +1,4 @@
+from nlp.ioc_extractor import extract_iocs
 from fastapi import APIRouter, UploadFile, File
 from app.services.detection_service import detect_security_incidents
 from app.services.upload_service import (
@@ -21,6 +22,8 @@ async def upload_log(file: UploadFile = File(...)):
 
     content = read_log_file(file_path)
 
+    iocs = extract_iocs(content)
+
     parse_result = parse_log_content(content)
 
     parsed_logs = parse_result["parsed_logs"]
@@ -30,7 +33,10 @@ async def upload_log(file: UploadFile = File(...)):
     parsed_logs
     )
 
-    alerts = detect_security_incidents(normalized_events)
+    alerts = detect_security_incidents(
+    normalized_events,
+    iocs,
+    )
 
     return {
         "filename": file.filename,

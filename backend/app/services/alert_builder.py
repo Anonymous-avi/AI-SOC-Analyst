@@ -1,3 +1,4 @@
+from app.schemas.ioc import IOC
 from app.services.threat_score_service import calculate_threat_score
 from datetime import datetime
 from uuid import uuid4
@@ -9,7 +10,10 @@ from app.schemas.security_alert import (
 from app.services.mitre_service import get_mitre_mapping
 
 
-def build_security_alert(detector_output: dict) -> SecurityAlert:
+def build_security_alert(
+    detector_output: dict,
+    iocs: IOC,
+) -> SecurityAlert:
 
     severity = AlertSeverity(
         detector_output["severity"].upper()
@@ -18,7 +22,15 @@ def build_security_alert(detector_output: dict) -> SecurityAlert:
     mitre = get_mitre_mapping(
         detector_output["attack_type"]
     )
-    ioc_count = 1
+    ioc_count = (
+    len(iocs.ips)
+    + len(iocs.domains)
+    + len(iocs.urls)
+    + len(iocs.cves)
+    + len(iocs.hashes)
+    + len(iocs.emails)
+    + len(iocs.malware)
+)
 
     score = calculate_threat_score(
     attack_type=detector_output["attack_type"],
@@ -52,6 +64,8 @@ def build_security_alert(detector_output: dict) -> SecurityAlert:
         recommendation=detector_output["recommendation"],
 
         mitre=mitre,
+
+        iocs=iocs,
 
         threat_score=score,
 
