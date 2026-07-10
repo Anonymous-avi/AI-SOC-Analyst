@@ -82,10 +82,11 @@ def build_security_alert(
     confidence = 0.95
 
     score = calculate_threat_score(
-        attack_type=detector_output["attack_type"],
-        severity=severity,
-        confidence=confidence,
-        ioc_count=ioc_count,
+    attack_type=detector_output["attack_type"],
+    severity=severity,
+    confidence=confidence,
+    ioc_count=ioc_count,
+    threat_intelligence=threat_intelligence,
     )
 
     if score >= 90:

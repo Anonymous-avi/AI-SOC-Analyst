@@ -115,7 +115,7 @@ def test_build_critical_alert_with_multiple_iocs():
     assert alert.iocs.ips == ["203.45.12.8"]
     assert alert.iocs.cves == ["CVE-2024-12345"]
 
-    assert alert.threat_score == 95
+    assert alert.threat_score == 100
     assert alert.risk_level == "Critical"
     assert len(alert.threat_intelligence) == 1
 
