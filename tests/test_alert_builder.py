@@ -1,24 +1,54 @@
-from app.schemas.ioc import IOC
+from datetime import datetime, timezone
+
 from app.schemas.security_alert import SecurityAlert
+from app.schemas.security_event import SecurityEvent
 from app.services.alert_builder import build_security_alert
 
 
+def create_security_event(
+    source_ip: str,
+    event_type: str,
+    service: str,
+    raw_event: dict,
+) -> SecurityEvent:
+    return SecurityEvent(
+        timestamp=datetime.now(timezone.utc),
+        source_type="test",
+        source_ip=source_ip,
+        destination_ip=None,
+        hostname=None,
+        service=service,
+        event_type=event_type,
+        user=None,
+        action=None,
+        raw_event=raw_event,
+    )
+
+
 def test_build_brute_force_security_alert():
+
+    evidence_event = create_security_event(
+        source_ip="192.168.1.10",
+        event_type="authentication_failure",
+        service="ssh",
+        raw_event={
+            "message": (
+                "Failed password for admin "
+                "from 192.168.1.10"
+            )
+        },
+    )
 
     detector_output = {
         "attack_type": "Brute Force",
         "severity": "High",
         "attacker_ip": "192.168.1.10",
+        "evidence_events": [evidence_event],
         "recommendation": "Investigate the source IP.",
     }
 
-    iocs = IOC(
-        ips=["192.168.1.10"],
-    )
-
     alert = build_security_alert(
         detector_output=detector_output,
-        iocs=iocs,
     )
 
     assert isinstance(alert, SecurityAlert)
@@ -43,21 +73,29 @@ def test_build_brute_force_security_alert():
 
 def test_build_critical_alert_with_multiple_iocs():
 
+    evidence_event = create_security_event(
+        source_ip="203.45.12.8",
+        event_type="http_request",
+        service="apache",
+        raw_event={
+            "path": "/../../etc/passwd",
+            "description": (
+                "Request from 203.45.12.8 related "
+                "to CVE-2024-12345"
+            ),
+        },
+    )
+
     detector_output = {
         "attack_type": "Path Traversal",
         "severity": "High",
         "attacker_ip": "203.45.12.8",
+        "evidence_events": [evidence_event],
         "recommendation": "Investigate the web request.",
     }
 
-    iocs = IOC(
-        ips=["203.45.12.8"],
-        cves=["CVE-2024-12345"],
-    )
-
     alert = build_security_alert(
         detector_output=detector_output,
-        iocs=iocs,
     )
 
     assert isinstance(alert, SecurityAlert)
@@ -75,18 +113,27 @@ def test_build_critical_alert_with_multiple_iocs():
 
 def test_generated_alert_ids_are_unique():
 
+    evidence_event = create_security_event(
+        source_ip="192.168.1.10",
+        event_type="authentication_failure",
+        service="ssh",
+        raw_event={
+            "message": (
+                "Failed password for admin "
+                "from 192.168.1.10"
+            )
+        },
+    )
+
     detector_output = {
         "attack_type": "Brute Force",
         "severity": "High",
         "attacker_ip": "192.168.1.10",
+        "evidence_events": [evidence_event],
         "recommendation": "Investigate the source IP.",
     }
 
-    iocs = IOC(
-        ips=["192.168.1.10"],
-    )
-
-    first_alert = build_security_alert(detector_output, iocs)
-    second_alert = build_security_alert(detector_output, iocs)
+    first_alert = build_security_alert(detector_output)
+    second_alert = build_security_alert(detector_output)
 
     assert first_alert.alert_id != second_alert.alert_id

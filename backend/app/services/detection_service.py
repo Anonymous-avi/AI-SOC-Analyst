@@ -1,6 +1,6 @@
-from app.schemas.ioc import IOC
-from app.services.alert_builder import build_security_alert
 from app.schemas.security_event import SecurityEvent
+from app.services.alert_builder import build_security_alert
+
 from ml.anomaly_detection import (
     detect_brute_force,
     detect_path_traversal,
@@ -14,8 +14,7 @@ DETECTORS = [
 
 
 def detect_security_incidents(
-    events,
-    iocs: IOC,
+    events: list[SecurityEvent],
 ):
     security_alerts = []
 
@@ -25,7 +24,6 @@ def detect_security_incidents(
         for result in detector_results:
             alert = build_security_alert(
                 detector_output=result,
-                iocs=iocs,
             )
 
             security_alerts.append(alert)

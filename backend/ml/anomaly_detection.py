@@ -4,17 +4,16 @@ from datetime import timedelta
 from app.schemas.security_event import SecurityEvent
 
 
-
-
-
 def detect_brute_force(
     events: list[SecurityEvent],
     threshold: int = 3,
-    window_seconds: int = 60
+    window_seconds: int = 60,
 ):
     failures_by_ip = defaultdict(list)
 
+    # Group authentication failures by source IP
     for event in events:
+
         if event.event_type != "authentication_failure":
             continue
 
@@ -29,14 +28,18 @@ def detect_brute_force(
 
     alerts = []
 
+    # Analyze failures for each source IP
     for source_ip, failures in failures_by_ip.items():
+
         failures.sort(key=lambda item: item[0])
 
         window_start = 0
 
         for window_end in range(len(failures)):
+
             current_time = failures[window_end][0]
 
+            # Remove events outside the detection window
             while (
                 current_time - failures[window_start][0]
                 > timedelta(seconds=window_seconds)
@@ -45,7 +48,9 @@ def detect_brute_force(
 
             window_size = window_end - window_start + 1
 
+            # Brute-force attack detected
             if window_size >= threshold:
+
                 window_events = failures[
                     window_start:window_end + 1
                 ]
@@ -65,28 +70,42 @@ def detect_brute_force(
                     "attacker_ip": source_ip,
                     "failed_attempts": window_size,
                     "target_users": targeted_users,
+
                     "window_start": start_time.isoformat(),
                     "window_end": end_time.isoformat(),
+
                     "window_seconds": (
                         end_time - start_time
                     ).total_seconds(),
+
+                    # SecurityEvents that triggered this detection
+                    "evidence_events": [
+                        event
+                        for _, event in window_events
+                    ],
+
                     "recommendation": (
                         "Investigate the source IP, review authentication "
                         "activity around the detection window, reset affected "
                         "credentials if compromise is suspected, and enforce MFA."
-                    )
+                    ),
                 })
 
+                # Only generate one alert per source IP
                 break
 
     return alerts
-def detect_path_traversal(events: list[SecurityEvent]):
+
+
+def detect_path_traversal(
+    events: list[SecurityEvent],
+):
 
     suspicious_patterns = [
         "../",
         "..\\",
         "%2e%2e",
-        "%252e%252e"
+        "%252e%252e",
     ]
 
     alerts = []
@@ -109,7 +128,7 @@ def detect_path_traversal(events: list[SecurityEvent]):
                 for pattern in suspicious_patterns
                 if pattern in normalized_path
             ),
-            None
+            None,
         )
 
         if matched_pattern:
@@ -118,18 +137,28 @@ def detect_path_traversal(events: list[SecurityEvent]):
                 "attack_type": "Path Traversal",
                 "severity": "high",
                 "attacker_ip": event.source_ip,
+
                 "request_method": event.action,
                 "requested_path": path,
-                "status_code": event.raw_event.get("status_code"),
-                "evidence": (
-                    f"Suspicious path pattern detected: {matched_pattern}"
+
+                "status_code": event.raw_event.get(
+                    "status_code"
                 ),
+
+                "evidence": (
+                    f"Suspicious path pattern detected: "
+                    f"{matched_pattern}"
+                ),
+
+                # Only this event triggered this detection
+                "evidence_events": [event],
+
                 "recommendation": (
                     "Investigate the source IP and affected endpoint, review "
                     "related web requests, validate and canonicalize paths, "
                     "and ensure the web server cannot access files outside "
                     "intended directories."
-                )
+                ),
             })
 
     return alerts
