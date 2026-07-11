@@ -1,29 +1,25 @@
-# Python Virtual Environments
+# Python
 venv/
-.venv/
-
-# Python Cache
 __pycache__/
-*.pyc
+*.py[cod]
 .pytest_cache/
-.ipynb_checkpoints/
 
-# Environment Variables
+# Environment variables
 .env
+*.env
 
-# Uploads
-backend/uploads/
-
-# Trained Models
-models/
-
-# Frontend
+# Node
 node_modules/
-dist/
+frontend/node_modules/
+frontend/dist/
 
-# VS Code
+# Uploaded runtime files
+backend/uploads/
+uploads/
+
+# IDE
 .vscode/
 
-# OS Files
+# OS
 .DS_Store
 Thumbs.db
