@@ -10,12 +10,22 @@ import AttackTypeChart from "../components/charts/AttackTypeChart";
 import ThreatScoreChart from "../components/charts/ThreatScoreChart";
 import UploadLogs from "../components/UploadLogs";
 
+import SearchBar from "../components/SearchBar";
+import FilterBar from "../components/FilterBar";
+import Pagination from "../components/Pagination";
 
 function DashboardPage() {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
+  const [severity, setSeverity] = useState("");
+
+  const [risk, setRisk] = useState("");
+
+  const [attackType, setAttackType] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   async function loadAlerts() {
     try {
@@ -31,22 +41,63 @@ function DashboardPage() {
         setLoading(false);
     }
 }
+const filteredAlerts = alerts.filter((alert) => {
+  const matchesSearch =
+    alert.alert_id
+      ?.toLowerCase()
+      .includes(searchTerm.toLowerCase()) ||
+    alert.attacker_ip
+      ?.toLowerCase()
+      .includes(searchTerm.toLowerCase()) ||
+    alert.attack_type
+      ?.toLowerCase()
+      .includes(searchTerm.toLowerCase());
+
+  const matchesSeverity =
+    severity === "" ||
+    alert.severity === severity;
+
+  const matchesRisk =
+    risk === "" ||
+    alert.risk_level === risk;
+
+  const matchesAttack =
+    attackType === "" ||
+    alert.attack_type === attackType;
+
+  return (
+    matchesSearch &&
+    matchesSeverity &&
+    matchesRisk &&
+    matchesAttack
+  );
+});
+const alertsPerPage = 5;
+
+const totalPages = Math.ceil(
+  filteredAlerts.length / alertsPerPage
+);
+
+const paginatedAlerts = filteredAlerts.slice(
+  (currentPage - 1) * alertsPerPage,
+  currentPage * alertsPerPage
+);
 
 useEffect(() => {
     loadAlerts();
 }, []);
 
-  const criticalAlerts = alerts.filter(
-    (alert) => alert.risk_level?.toLowerCase() === "critical"
+  const criticalAlerts = filteredAlerts.filter(
+  (alert) => alert.risk_level?.toLowerCase() === "critical"
   ).length;
 
-  const highAlerts = alerts.filter(
-    (alert) => alert.risk_level?.toLowerCase() === "high"
-  ).length;
+  const highAlerts = filteredAlerts.filter(
+  (alert) => alert.risk_level?.toLowerCase() === "high"
+).length;
 
-  const averageThreatScore = alerts.length
+  const averageThreatScore = filteredAlerts.length
     ? Math.round(
-        alerts.reduce(
+        filteredAlerts.reduce(
           (total, alert) => total + alert.threat_score,
           0
         ) / alerts.length
@@ -142,15 +193,37 @@ useEffect(() => {
 
 
         <div className="grid gap-6 lg:grid-cols-2 mb-8">
-         <SeverityChart alerts={alerts} />
-         <AttackTypeChart alerts={alerts} />
+         <SeverityChart alerts={filteredAlerts} />
+         <AttackTypeChart alerts={filteredAlerts} />
         </div>
 
         <div className="mb-8">
-        <ThreatScoreChart alerts={alerts} />
+        <ThreatScoreChart alerts={filteredAlerts} />
         </div>
 
-<AlertTable alerts={alerts} />
+<SearchBar
+  searchTerm={searchTerm}
+  setSearchTerm={setSearchTerm}
+/>
+
+<FilterBar
+  severity={severity}
+  setSeverity={setSeverity}
+  risk={risk}
+  setRisk={setRisk}
+  attackType={attackType}
+  setAttackType={setAttackType}
+/>
+
+<>
+  <AlertTable alerts={paginatedAlerts} />
+
+  <Pagination
+    currentPage={currentPage}
+    totalPages={totalPages}
+    setCurrentPage={setCurrentPage}
+  />
+</>
       </section>
     </main>
   );

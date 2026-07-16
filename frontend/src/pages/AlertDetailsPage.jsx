@@ -3,6 +3,7 @@ import { ArrowLeft, ShieldAlert } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { fetchAlertById } from "../api/alertsApi";
+import AISummaryCard from "../components/AISummaryCard";
 
 
 function AlertDetailsPage() {
@@ -151,6 +152,7 @@ function AlertDetailsPage() {
           </SectionCard>
 
         </div>
+        <AISummaryCard alertId={alert.alert_id} />
 
 
         <SectionCard title="Indicators of Compromise">
