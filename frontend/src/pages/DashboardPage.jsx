@@ -5,6 +5,11 @@ import { fetchAlerts } from "../api/alertsApi";
 import AlertTable from "../components/AlertTable";
 import StatCard from "../components/StatCard";
 
+import SeverityChart from "../components/charts/SeverityChart";
+import AttackTypeChart from "../components/charts/AttackTypeChart";
+import ThreatScoreChart from "../components/charts/ThreatScoreChart";
+import UploadLogs from "../components/UploadLogs";
+
 
 function DashboardPage() {
   const [alerts, setAlerts] = useState([]);
@@ -12,22 +17,24 @@ function DashboardPage() {
   const [error, setError] = useState("");
 
 
-  useEffect(() => {
-    async function loadAlerts() {
-      try {
+  async function loadAlerts() {
+    try {
+        setLoading(true);
+
         const data = await fetchAlerts();
+
         setAlerts(data);
-      } catch (err) {
+    } catch (err) {
         console.error(err);
         setError("Failed to load security alerts.");
-      } finally {
+    } finally {
         setLoading(false);
-      }
     }
+}
 
+useEffect(() => {
     loadAlerts();
-  }, []);
-
+}, []);
 
   const criticalAlerts = alerts.filter(
     (alert) => alert.risk_level?.toLowerCase() === "critical"
@@ -88,6 +95,11 @@ function DashboardPage() {
 
       <section className="mx-auto max-w-7xl p-8">
         <div className="mb-8">
+      <UploadLogs
+        onUploadSuccess={loadAlerts}
+       />
+       </div>
+        <div className="mb-8">
           <h2 className="text-3xl font-bold">
             Security Overview
           </h2>
@@ -129,7 +141,16 @@ function DashboardPage() {
         </div>
 
 
-        <AlertTable alerts={alerts} />
+        <div className="grid gap-6 lg:grid-cols-2 mb-8">
+         <SeverityChart alerts={alerts} />
+         <AttackTypeChart alerts={alerts} />
+        </div>
+
+        <div className="mb-8">
+        <ThreatScoreChart alerts={alerts} />
+        </div>
+
+<AlertTable alerts={alerts} />
       </section>
     </main>
   );
