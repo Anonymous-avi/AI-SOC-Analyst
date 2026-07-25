@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { fetchAlertById } from "../api/alertsApi";
 import AISummaryCard from "../components/AISummaryCard";
+import { downloadReport } from "../api/reportsApi";
 
 
 function AlertDetailsPage() {
@@ -61,27 +62,42 @@ function AlertDetailsPage() {
   return (
     <main className="min-h-screen bg-slate-950 text-white">
       <header className="border-b border-slate-800 px-8 py-5">
-        <div className="mx-auto flex max-w-7xl items-center gap-4">
-          <button
-            onClick={() => navigate("/")}
-            className="rounded-lg border border-slate-800 p-2 text-slate-400 hover:bg-slate-900 hover:text-white"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
+  <div className="mx-auto flex max-w-7xl items-center justify-between">
 
-          <ShieldAlert className="h-8 w-8 text-cyan-400" />
+    {/* Left Side */}
+    <div className="flex items-center gap-4">
 
-          <div>
-            <h1 className="text-2xl font-bold">
-              Alert Investigation
-            </h1>
+      <button
+        onClick={() => navigate("/")}
+        className="rounded-lg border border-slate-800 p-2 text-slate-400 hover:bg-slate-900 hover:text-white"
+      >
+        <ArrowLeft className="h-5 w-5" />
+      </button>
 
-            <p className="text-sm text-slate-500">
-              {alert.alert_id}
-            </p>
-          </div>
-        </div>
-      </header>
+      <ShieldAlert className="h-8 w-8 text-cyan-400" />
+
+      <div>
+        <h1 className="text-2xl font-bold">
+          Alert Investigation
+        </h1>
+
+        <p className="text-sm text-slate-500">
+          {alert.alert_id}
+        </p>
+      </div>
+
+    </div>
+
+    {/* Right Side */}
+    <button
+      onClick={() => downloadReport(alert.alert_id)}
+      className="rounded-lg bg-cyan-600 px-4 py-2 font-medium text-white transition hover:bg-cyan-700"
+    >
+      📄 Export PDF
+    </button>
+
+  </div>
+</header>
 
 
       <section className="mx-auto max-w-7xl space-y-6 p-8">

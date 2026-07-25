@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routers import upload
 from app.routers import alerts
 from app.routers import ai
+from app.routers import reports
 
 
 app = FastAPI(
@@ -28,6 +29,7 @@ app.add_middleware(
 app.include_router(upload.router)
 app.include_router(alerts.router)
 app.include_router(ai.router)
+app.include_router(reports.router)
 
 
 @app.get("/")
