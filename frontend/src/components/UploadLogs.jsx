@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Upload } from "lucide-react";
+import { useRef, useState } from "react";
+import { FileUp, Upload, ShieldAlert } from "lucide-react";
 
 import { uploadLog } from "../api/alertsApi";
 
@@ -7,6 +7,18 @@ function UploadLogs({ onUploadSuccess }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
+  const inputRef = useRef(null);
+
+  function setFile(file) {
+    if (!file) {
+      setSelectedFile(null);
+      return;
+    }
+
+    setSelectedFile(file);
+    setMessage("");
+  }
 
   async function handleUpload() {
     if (!selectedFile) {
@@ -35,35 +47,102 @@ function UploadLogs({ onUploadSuccess }) {
     }
   }
 
-  return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-      <div className="mb-5 flex items-center gap-3">
-        <Upload className="h-6 w-6 text-cyan-400" />
+  function handleDrop(event) {
+    event.preventDefault();
+    setIsDragging(false);
 
-        <h2 className="text-lg font-semibold text-white">
-          Upload Security Logs
-        </h2>
+    const file = event.dataTransfer.files?.[0];
+    setFile(file);
+  }
+
+  return (
+    <div className="upload-card card-surface">
+      <div className="chart-card-header">
+        <div className="flex items-center gap-3">
+          <span className="soc-logo">
+            <ShieldAlert size={18} />
+          </span>
+
+          <div>
+            <h2 className="section-title">Upload Security Logs</h2>
+            <p className="section-subtitle">
+              Drag and drop one or more raw logs to start normalization and threat detection.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          className="secondary-button"
+        >
+          <FileUp size={16} />
+          Choose File
+        </button>
       </div>
 
-      <input
-        type="file"
-        accept=".txt,.log"
-        onChange={(e) =>
-          setSelectedFile(e.target.files[0])
-        }
-        className="mb-4 block w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-slate-300"
-      />
-
-      <button
-        onClick={handleUpload}
-        disabled={uploading}
-        className="rounded-lg bg-cyan-600 px-5 py-2 font-semibold text-white hover:bg-cyan-500 disabled:opacity-50"
+      <div
+        className={`dropzone ${isDragging ? "active" : ""}`}
+        onDragOver={(event) => {
+          event.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={handleDrop}
+        onClick={() => inputRef.current?.click()}
+        role="button"
+        tabIndex={0}
       >
-        {uploading ? "Uploading..." : "Upload Logs"}
-      </button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept=".txt,.log"
+          onChange={(e) => setFile(e.target.files?.[0])}
+          className="hidden"
+        />
+
+        <div className="flex items-start gap-4">
+          <div className="metric-icon">
+            <Upload size={20} />
+          </div>
+
+          <div>
+            <p className="section-title">Drop log files here</p>
+            <p className="section-subtitle">
+              Supports text-based logs used by the parser and normalization services.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--text-muted)]">
+          <span className="chip">TXT</span>
+          <span className="chip">LOG</span>
+          <span className="chip">Multi-file ready</span>
+        </div>
+
+        {selectedFile ? (
+          <div className="rounded-2xl border border-[var(--border)] bg-white/5 px-4 py-3 text-sm text-[var(--text-soft)]">
+            Selected file: <span className="font-semibold text-[var(--text)]">{selectedFile.name}</span>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button
+          onClick={handleUpload}
+          disabled={uploading}
+          className="primary-button"
+        >
+          {uploading ? "Uploading..." : "Upload and Analyze"}
+        </button>
+
+        <span className="subtle-text text-sm">
+          Files are validated before the backend analyzer runs.
+        </span>
+      </div>
 
       {message && (
-        <p className="mt-4 text-sm text-slate-300">
+        <p className="mt-4 text-sm text-[var(--text-soft)]">
           {message}
         </p>
       )}

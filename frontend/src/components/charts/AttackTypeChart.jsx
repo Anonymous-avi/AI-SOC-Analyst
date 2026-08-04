@@ -29,10 +29,13 @@ function AttackTypeChart({ alerts }) {
   }));
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-      <h2 className="mb-4 text-lg font-semibold text-white">
-        Attack Types
-      </h2>
+    <div className="chart-card">
+      <div className="chart-card-header">
+        <div>
+          <h2 className="section-title">Attack Types</h2>
+          <p className="section-subtitle">Observed attack families in the uploaded data.</p>
+        </div>
+      </div>
 
       <ResponsiveContainer width="100%" height={300}>
         <PieChart>
@@ -51,7 +54,14 @@ function AttackTypeChart({ alerts }) {
             ))}
           </Pie>
 
-          <Tooltip />
+          <Tooltip
+            contentStyle={{
+              borderRadius: 16,
+              border: "1px solid var(--border)",
+              background: "var(--bg-elevated)",
+              color: "var(--text)",
+            }}
+          />
           <Legend />
         </PieChart>
       </ResponsiveContainer>

@@ -1,15 +1,28 @@
-function StatCard({ title, value, subtitle }) {
+function StatCard({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  tone = "primary",
+  className = "",
+}) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
-      <p className="text-sm font-medium text-slate-400">
-        {title}
-      </p>
+    <div className={`metric-card alert-gradient-border metric-card--large tone-${tone} ${className}`.trim()}>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="metric-label">{title}</p>
 
-      <p className="mt-2 text-3xl font-bold text-white">
-        {value}
-      </p>
+          <p className="metric-value">{value}</p>
+        </div>
 
-      <p className="mt-2 text-xs text-slate-500">
+        {Icon ? (
+          <span className={`metric-icon tone-${tone}`}>
+            <Icon size={20} />
+          </span>
+        ) : null}
+      </div>
+
+      <p className="metric-subtitle">
         {subtitle}
       </p>
     </div>

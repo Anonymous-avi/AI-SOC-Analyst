@@ -18,23 +18,60 @@ function getRiskClasses(riskLevel) {
 }
 
 
+function getSeverityClass(severity) {
+  switch (severity?.toLowerCase()) {
+    case "critical":
+      return "severity-chip severity-critical";
+
+    case "high":
+      return "severity-chip severity-high";
+
+    case "medium":
+      return "severity-chip severity-medium";
+
+    default:
+      return "severity-chip severity-low";
+  }
+}
+
+
 function AlertTable({ alerts }) {
   const navigate = useNavigate();
 
+  if (!alerts.length) {
+    return (
+      <div className="empty-state">
+        <div>
+          <p className="section-title">No alerts match the current filters</p>
+          <p className="section-subtitle">
+            Try broadening the search or upload a fresh log set to generate new detections.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
-      <div className="border-b border-slate-800 px-6 py-4">
-        <h2 className="text-lg font-semibold text-white">
-          Recent Security Alerts
-        </h2>
+    <div className="table-card overflow-hidden p-0">
+      <div className="table-card-header px-6 pt-6">
+        <div>
+          <h2 className="section-title">Recent Security Alerts</h2>
+          <p className="section-subtitle">
+            Click any incident to open the investigation workspace.
+          </p>
+        </div>
+
+        <span className="badge">{alerts.length} visible</span>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-left">
-          <thead className="bg-slate-950/50 text-xs uppercase text-slate-500">
+        <table className="alert-table">
+          <thead>
             <tr>
+              <th className="px-6 py-4">Timestamp</th>
               <th className="px-6 py-4">Alert</th>
               <th className="px-6 py-4">Attacker IP</th>
+              <th className="px-6 py-4">Attack Type</th>
               <th className="px-6 py-4">Severity</th>
               <th className="px-6 py-4">Threat Score</th>
               <th className="px-6 py-4">Risk</th>
@@ -52,33 +89,43 @@ function AlertTable({ alerts }) {
                     )}`
                   )
                 }
-                className="cursor-pointer border-t border-slate-800 text-sm transition hover:bg-slate-800/60"
+                className="alert-row cursor-pointer text-sm"
               >
+                <td className="px-6 py-4 text-[var(--text-muted)]">
+                  {alert.timestamp ? new Date(alert.timestamp).toLocaleString() : "Recent"}
+                </td>
+
                 <td className="px-6 py-4">
-                  <p className="font-medium text-white">
+                  <p className="font-medium text-[var(--text)]">
                     {alert.title}
                   </p>
 
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
                     {alert.alert_id}
                   </p>
                 </td>
 
-                <td className="px-6 py-4 text-slate-300">
+                <td className="px-6 py-4 text-[var(--text-soft)]">
                   {alert.attacker_ip ?? "Unknown"}
                 </td>
 
-                <td className="px-6 py-4 text-slate-300">
-                  {alert.severity}
+                <td className="px-6 py-4 text-[var(--text-soft)]">
+                  {alert.attack_type}
                 </td>
 
-                <td className="px-6 py-4 font-semibold text-white">
+                <td className="px-6 py-4">
+                  <span className={getSeverityClass(alert.severity)}>
+                    {alert.severity}
+                  </span>
+                </td>
+
+                <td className="px-6 py-4 font-semibold text-[var(--text)]">
                   {alert.threat_score}
                 </td>
 
                 <td className="px-6 py-4">
                   <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${getRiskClasses(
+                    className={`risk-chip ${getRiskClasses(
                       alert.risk_level
                     )}`}
                   >

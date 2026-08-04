@@ -27,20 +27,30 @@ function ThreatScoreChart({ alerts }) {
   });
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-      <h2 className="mb-4 text-lg font-semibold text-white">
-        Threat Score Distribution
-      </h2>
+    <div className="chart-card">
+      <div className="chart-card-header">
+        <div>
+          <h2 className="section-title">Threat Score Distribution</h2>
+          <p className="section-subtitle">Higher bars indicate more incidents in that score band.</p>
+        </div>
+      </div>
 
       <ResponsiveContainer width="100%" height={320}>
         <BarChart data={ranges}>
-          <XAxis dataKey="range" stroke="#94a3b8" />
-          <YAxis stroke="#94a3b8" />
-          <Tooltip />
+          <XAxis dataKey="range" stroke="var(--text-muted)" />
+          <YAxis stroke="var(--text-muted)" />
+          <Tooltip
+            contentStyle={{
+              borderRadius: 16,
+              border: "1px solid var(--border)",
+              background: "var(--bg-elevated)",
+              color: "var(--text)",
+            }}
+          />
           <Bar
             dataKey="count"
             fill="#22c55e"
-            radius={[6, 6, 0, 0]}
+            radius={[8, 8, 0, 0]}
           />
         </BarChart>
       </ResponsiveContainer>

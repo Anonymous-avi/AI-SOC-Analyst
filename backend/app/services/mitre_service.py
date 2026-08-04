@@ -13,6 +13,12 @@ MITRE_ATTACK_MAPPING = {
         tactic="Discovery",
         technique="File and Directory Discovery",
         technique_id="T1083"
+    ),
+
+    "Anomaly Detection": MitreTechnique(
+        tactic="Unknown",
+        technique="Behavioral Anomaly",
+        technique_id="N/A"
     )
 
 }

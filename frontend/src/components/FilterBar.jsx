@@ -7,11 +7,11 @@ function FilterBar({
   setAttackType,
 }) {
   return (
-    <div className="mb-6 grid gap-4 md:grid-cols-3">
+    <div className="toolbar-grid">
       <select
         value={severity}
         onChange={(e) => setSeverity(e.target.value)}
-        className="rounded-lg border border-slate-700 bg-slate-900 p-3 text-white"
+        className="select-field"
       >
         <option value="">All Severities</option>
         <option>CRITICAL</option>
@@ -23,7 +23,7 @@ function FilterBar({
       <select
         value={risk}
         onChange={(e) => setRisk(e.target.value)}
-        className="rounded-lg border border-slate-700 bg-slate-900 p-3 text-white"
+        className="select-field"
       >
         <option value="">All Risk Levels</option>
         <option>Critical</option>
@@ -35,11 +35,15 @@ function FilterBar({
       <select
         value={attackType}
         onChange={(e) => setAttackType(e.target.value)}
-        className="rounded-lg border border-slate-700 bg-slate-900 p-3 text-white"
+        className="select-field"
       >
         <option value="">All Attack Types</option>
         <option>Brute Force</option>
         <option>Path Traversal</option>
+        <option>SQL Injection</option>
+        <option>XSS</option>
+        <option>Command Injection</option>
+        <option>Port Scanning</option>
       </select>
     </div>
   );

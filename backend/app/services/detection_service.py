@@ -3,6 +3,7 @@ from app.services.alert_builder import build_security_alert
 
 from ml.anomaly_detection import (
     detect_brute_force,
+    detect_anomalies,
     detect_path_traversal,
 )
 
@@ -10,6 +11,7 @@ from ml.anomaly_detection import (
 DETECTORS = [
     detect_brute_force,
     detect_path_traversal,
+    detect_anomalies,
 ]
 
 

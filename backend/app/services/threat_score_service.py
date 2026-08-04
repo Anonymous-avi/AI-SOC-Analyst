@@ -15,6 +15,7 @@ def calculate_threat_score(
     attack_scores = {
         "Brute Force": 40,
         "Path Traversal": 45,
+        "Anomaly Detection": 35,
     }
 
     score += attack_scores.get(attack_type, 20)

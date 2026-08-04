@@ -29,17 +29,27 @@ function SeverityChart({ alerts }) {
   ];
 
   return (
-    <div className="rounded-xl bg-slate-900 p-6 border border-slate-800">
-      <h2 className="mb-4 text-lg font-semibold text-white">
-        Alerts by Severity
-      </h2>
+    <div className="chart-card">
+      <div className="chart-card-header">
+        <div>
+          <h2 className="section-title">Alerts by Severity</h2>
+          <p className="section-subtitle">Priority distribution across the current result set.</p>
+        </div>
+      </div>
 
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data}>
-          <XAxis dataKey="severity" stroke="#94a3b8" />
-          <YAxis stroke="#94a3b8" />
-          <Tooltip />
-          <Bar dataKey="count" fill="#38bdf8" radius={[6, 6, 0, 0]} />
+          <XAxis dataKey="severity" stroke="var(--text-muted)" />
+          <YAxis stroke="var(--text-muted)" />
+          <Tooltip
+            contentStyle={{
+              borderRadius: 16,
+              border: "1px solid var(--border)",
+              background: "var(--bg-elevated)",
+              color: "var(--text)",
+            }}
+          />
+          <Bar dataKey="count" fill="#38bdf8" radius={[8, 8, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

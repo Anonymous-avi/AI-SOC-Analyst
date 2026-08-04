@@ -1,9 +1,11 @@
+from typing import Any
+
 from app.schemas.threat_intelligence import ThreatIntelligenceResult
 from app.schemas.ioc import IOC
 from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class AlertSeverity(str, Enum):
@@ -46,3 +48,5 @@ class SecurityAlert(BaseModel):
     iocs: IOC
     
     threat_intelligence: list[ThreatIntelligenceResult]
+
+    metadata: dict[str, Any] = Field(default_factory=dict)
